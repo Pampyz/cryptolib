@@ -16,7 +16,7 @@ def play_with_field():
     y = field.get_random_element()
 
     print(x)
-    print(x ^ y)
+    print(x ^ 100)
     print(FieldElement(4, field)*x)
 
 

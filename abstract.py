@@ -153,7 +153,7 @@ class GroupElement:
 class EllipticGroup(Group):
     """ 
         Group based on the secp256k1 elliptic curve 
-        Usually considered additive but multiplicatively implemented 
+        Usually considered additive but multiplicatively implemented
     """
 
     def __init__(self):
@@ -167,67 +167,68 @@ class EllipticGroup(Group):
         self.Gx = '0x79BE667E F9DCBBAC 55A06295 CE870B07 029BFCDB 2DCE28D9 59F2815B 16F81798'.replace(' ', '')
         self.Gy = '0x483ADA77 26A3C465 5DA4FBFC 0E1108A8 FD17B448 A6855419 9C47D08F FB10D4B8'.replace(' ', '')
 
-        # Here we should put self.G = EllipicKeyPoint(...., params)
-
     def one(self):
         raise ArithmeticError('Not sure what the identity is in this Group!') 
 
     def multiply(self, left, right):
-        return EllipticGroupElement((left.value * right.value) % self.p, self)
+        raise NotImplementedError
 
     def inverse(self, operand):
-        a, b, g = xgcd(operand.value, self.p)
-        return EllipticGroupElement(a, self)
+        return EllipticGroupElement(operand.x, -operand.y, self)
+    
+    def double(self, operand):
+        pass
 
     def divide(self, left, right):
-        assert(not right.is_zero()), "Cannot divide by zero"
-        a, b, g = xgcd(right.value, self.p)
-        return EllipticGroupElement(left.value * a % self.p, self)
+        raise NotImplementedError
 
-    def generate_solutions_from_base(self, n_solutions):
-        gpx = GroupPoint(self.Gx, self.p)
-        gpy = GroupPoint(self.Gy, self.p)
-
-        l1 = (GroupPoint(3, modulus=self.p)*gpx**2)
-        l2 = (GroupPoint(2, modulus=self.p)*gpy)
-        l = l1 / l2
-
-        x = l**2 - GroupPoint(2, modulus=self.p)*gpx
-        y = l*(x - gpx) + gpy
-
-        print((y**2 - x**3 - GroupPoint(self.b, self.p)).value)
-
-        for i in range(0, 100):
-            gpx = x
-            gpy = y
-
-            l1 = (GroupPoint(3, modulus=self.p)*gpx**2)
-            l2 = (GroupPoint(2, modulus=self.p)*gpy)
-            l = l1 / l2
-
-            x = l**2 - GroupPoint(2, modulus=self.p)*gpx
-            y = l*(x - gpx) + gpy
-
-            print((y**2 - x**3 - GroupPoint(self.b, self.p)).value)
-
-    def generate_solutions(self):
-        solutions = []
-        for x in range(-1000, 1000):
-            for y in range(0, 10000):
-                ###
-                if (y**2 - x**3 - self.b):
-                    solutions.append([x, y])
-        print(solutions)
-        for sol in solutions:
-            plt.scatter(sol)
-        plt.show()
-
+    def generator(self):
+        return EllipticGroupElement(self.Gx, self.Gy, self)
+    
 class EllipticGroupElement(GroupElement):
-    pass
+    def __init__(self, x, y, group):
+        self.x = FieldElement(x, Field(group.p))
+        self.y = FieldElement(y, Field(group.p))
+        self.group = group
 
-class SchnorrGroup(Group):
-    def __init__(self, p, q, r):
-        pass
+    def __mul__(self, right):
+        return self.group.multiply(self, right)
+
+    def __truediv__(self, right):
+        return self.group.divide(self, right)
+
+    def inverse(self):
+        return self.field.inverse(self)
+
+    def verify_solution(self):
+        assert self.y*self.y - self.x*self.x*self.x self.group.a
+        #Solutions x, y of the equation y2 = x3 + ax + b over Fp 
+
+    # Modular exponentiation
+    def __xor__(self, exponent):
+        acc = FieldElement(1, self.field)
+        val = FieldElement(self.value, self.field)
+        for i in reversed(range(len(bin(exponent)[2:]))):
+            acc = acc * acc
+            if (1 << i) & exponent != 0:
+                acc = acc * val
+        return acc
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __neq__(self, other):
+        return self.value != other.value
+
+    def __str__(self):
+        return str(self.value)
+
+    def __bytes__(self):
+        return bytes(str(self).encode())
+
+#class SchnorrGroup(Group):
+#    def __init__(self, p, q, r):
+#        pass
     
 def xgcd(x, y):
     """ Implementation of extended euclidean algorithm to find inverse modulo p """
