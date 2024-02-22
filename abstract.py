@@ -63,8 +63,15 @@ class FieldElement:
         return self.field.inverse(self)
 
     def __pow__(self, exponent):
-        # To be implemented
-        raise NotImplementedError
+        ''' Double-and-add implementation of exponentiation '''
+        if exponent == 0:
+            return self.field.one()
+        elif exponent == 1:
+            return self
+        elif exponent % 2 == 0:
+            return (self*self)**(int(exponent//2))
+        else:
+            return self*((self*self)**(int((exponent-1)//2)))
 
     # Modular exponentiation
     def __xor__(self, exponent):
@@ -161,11 +168,15 @@ class EllipticGroup(Group):
         Solutions x, y of the equation y2 = x3 + ax + b over Fp 
         Base point G given by coordinates Gx, Gy    
         """
-        self.p = '0xFFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F'.replace(' ', '')
-        self.a = '0x00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000'.replace(' ', '')
-        self.b = '0x00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000007'.replace(' ', '')
-        self.Gx = '0x79BE667E F9DCBBAC 55A06295 CE870B07 029BFCDB 2DCE28D9 59F2815B 16F81798'.replace(' ', '')
-        self.Gy = '0x483ADA77 26A3C465 5DA4FBFC 0E1108A8 FD17B448 A6855419 9C47D08F FB10D4B8'.replace(' ', '')
+        self.p = int('0xFFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F'.replace(' ', ''), 16)
+        self.a = int('0x00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000'.replace(' ', ''), 16)
+        self.b = int('0x00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000007'.replace(' ', ''), 16)
+        self.Gx = int('0x79BE667E F9DCBBAC 55A06295 CE870B07 029BFCDB 2DCE28D9 59F2815B 16F81798'.replace(' ', ''), 16)
+        self.Gy = int('0x483ADA77 26A3C465 5DA4FBFC 0E1108A8 FD17B448 A6855419 9C47D08F FB10D4B8'.replace(' ', ''), 16)
+
+        self.field = Field(self.p)
+        self.a = FieldElement(self.a, self.field)
+        self.b = FieldElement(self.b, self.field)
 
     def one(self):
         raise ArithmeticError('Not sure what the identity is in this Group!') 
@@ -200,8 +211,10 @@ class EllipticGroupElement(GroupElement):
     def inverse(self):
         return self.field.inverse(self)
 
-    def verify_solution(self):
-        assert self.y*self.y - self.x*self.x*self.x self.group.a
+    def assert_solution(self):
+        return (self.y**2) - (self.x**3) - self.group.a*self.x - self.group.b
+        #assert (self.y^2) - 
+        #assert self.y*self.y - self.x*self.x*self.x self.group.a
         #Solutions x, y of the equation y2 = x3 + ax + b over Fp 
 
     # Modular exponentiation
@@ -221,14 +234,14 @@ class EllipticGroupElement(GroupElement):
         return self.value != other.value
 
     def __str__(self):
-        return str(self.value)
+        return str((str(self.x), str(self.y)))
 
     def __bytes__(self):
         return bytes(str(self).encode())
 
-#class SchnorrGroup(Group):
-#    def __init__(self, p, q, r):
-#        pass
+class SchnorrGroup(Group):
+    def __init__(self, p, q, r):
+        pass
     
 def xgcd(x, y):
     """ Implementation of extended euclidean algorithm to find inverse modulo p """

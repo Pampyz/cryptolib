@@ -1,12 +1,4 @@
-from abstract import Field, FieldElement, Group, GroupElement
-
-
-def play_with_group():
-    big_prime = 1 + 407 * (1 << 119)
-    field = Field(big_prime)
-
-    print(random_number)
-
+from abstract import Field, FieldElement, Group, GroupElement, EllipticGroup, EllipticGroupElement
 
 def play_with_field():
     big_prime = 1 + 407 * (1 << 119)
@@ -18,6 +10,11 @@ def play_with_field():
     print(x)
     print(x ^ 100)
     print(FieldElement(4, field)*x)
+
+    ec = EllipticGroup()
+    g = ec.generator()
+    print('Generator: ', g)
+    print(g.assert_solution())
 
 
 def main():
